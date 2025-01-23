@@ -68,5 +68,47 @@ button {
 }
 
 button:hover {
-  background-color: #2929d6;
+  
+}
+/* Password input container */
+.password-input-container {
+  position: relative;
+}
+
+.password-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* Password input field */
+.password-input-wrapper input {
+  width: 100%;
+  padding-right: 40px; /* Space for the icon */
+}
+
+/* Password toggle button */
+.password-toggle-button {
+  position: absolute;
+ 
+  top: 50%;
+  left:218px;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  color: #666; /* Icon color */
+}
+
+.password-toggle-button:hover {
+  color: #333; /* Icon color on hover */
+}
+
+/* Remove default button styling */
+.password-toggle-button:focus {
+  outline: none;
 }

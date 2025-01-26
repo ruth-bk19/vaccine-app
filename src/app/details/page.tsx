@@ -1,10 +1,9 @@
 "use client";
-import { getAuth } from "firebase/auth"; // Import Firebase Auth
 import { addDoc, collection, getDocs } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import Select from "react-select";
-import { db } from "../firebaseConfig";
+import { auth, db } from "../firebaseConfig";
 import "./details.css";
 
 interface Vaccine {
@@ -44,7 +43,9 @@ const VaccineForm: React.FC = () => {
   });
 
   const [vaccineOptions, setVaccineOptions] = useState<Vaccine[]>([]);
+  const router = useRouter();
 
+  // Fetch vaccine options from Firestore
   const fetchVaccineOptions = async () => {
     try {
       const querySnapshot = await getDocs(collection(db, "Vaccines"));
@@ -62,18 +63,11 @@ const VaccineForm: React.FC = () => {
     }
   };
 
-  const customStyles = {
-    menu: (provided: any) => ({
-      ...provided,
-      maxHeight: "300px",
-      overflowY: "auto",
-    }),
-  };
-
   useEffect(() => {
     fetchVaccineOptions();
   }, []);
 
+  // Handle input changes
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -83,6 +77,7 @@ const VaccineForm: React.FC = () => {
     });
   };
 
+  // Handle vaccine selection change
   const handleVaccineChange = (option: any) => {
     if (option) {
       setFormData({
@@ -99,66 +94,66 @@ const VaccineForm: React.FC = () => {
     }
   };
 
-  const router = useRouter();
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validations
-    if (!formData.vaccineName) {
-      alert("Please select a Vaccine Name.");
-      return;
-    }
-
-    if (!formData.fullName.trim()) {
-      alert("Please enter your Full Name.");
-      return;
-    }
-
-    if (!/^\d{10}$/.test(formData.phone)) {
-      alert("Please enter a valid 10-digit phone number.");
-      return;
-    }
-
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      alert("Please enter a valid email.");
-      return;
-    }
-
-    if (!formData.dateOfBirth) {
-      alert("Please enter your Date of Birth.");
-      return;
-    }
-
-    if (!formData.preferredDate) {
-      alert("Please select a Preferred Vaccination Date.");
-      return;
-    }
-
-    if (!formData.reminderDate) {
-      alert("Please select a Reminder Date.");
+    // Basic validation
+    if (
+      !formData.vaccineName ||
+      !formData.fullName ||
+      !formData.dateOfBirth ||
+      !formData.email ||
+      !formData.phone ||
+      !formData.preferredDate ||
+      !formData.reminderDate
+    ) {
+      alert("Please fill out all required fields.");
       return;
     }
 
     try {
-      const auth = getAuth(); // Initialize Firebase Auth
-      const user = auth.currentUser; // Get the current user
-
-      if (!user) {
-        alert("User is not logged in.");
-        return;
-      }
-
-      // Submit the form data along with userId
-      await addDoc(collection(db, "vaccineReminders"), {
-        ...formData,
-        vaccineName: formData.vaccineName?.value, // Only submit the vaccine name, but you can add more if needed
-        userId: user.uid, // Add userId to associate event with logged-in user
+      // Add the form data to Firestore
+      const docRef = await addDoc(collection(db, "VaccineReminders"), {
+        vaccineName: formData.vaccineName.label,
+        vaccineType: formData.vaccineType,
+        fullName: formData.fullName,
+        dateOfBirth: formData.dateOfBirth,
+        email: formData.email,
+        phone: formData.phone,
+        preferredDate: formData.preferredDate,
+        reminderDate: formData.reminderDate,
+        healthConditions: formData.healthConditions || "",
+        notes: formData.notes || "",
+        userId: auth.currentUser?.uid,
       });
 
-      alert("Vaccine details submitted successfully!");
+      console.log("Document written with ID: ", docRef.id);
 
-      // Reset form after submission
+      // Send email notification using the Next.js API route
+      const emailData = {
+        to_email: "ruthbishwokarma194@gmail.com", // Use the user's email from the form
+        to_name: formData.fullName,
+        message: `Your vaccine reminder for ${formData.vaccineName.label} has been scheduled for ${formData.preferredDate}.`,
+      };
+
+      const response = await fetch("https://4000/pages/api/send-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(emailData),
+      });
+      console.log("email Api response", response.status);
+
+      if (!response.ok) {
+        throw new Error(`Failed to send email: ${response.statusText}`);
+      }
+
+      alert(
+        "Vaccine details submitted and confirmation email sent successfully!"
+      );
+
+      // Reset form data
       setFormData({
         vaccineName: null,
         vaccineType: "",
@@ -172,10 +167,12 @@ const VaccineForm: React.FC = () => {
         notes: "",
       });
 
-      router.push("/home");
+      // Redirect to dashboard after all async operations are complete
+      router.push("/dash");
     } catch (error) {
-      console.error("Error adding document: ", error);
-      alert("Failed to submit vaccine details.");
+      console.error("Error adding document or sending email: ", error);
+      console.log("error", error);
+      alert("Failed to submit vaccine details or send email.");
     }
   };
 
@@ -191,7 +188,7 @@ const VaccineForm: React.FC = () => {
           onChange={handleVaccineChange}
           placeholder="Select a vaccine..."
           isSearchable={true}
-          styles={customStyles}
+          required
         />
       </label>
 
@@ -203,6 +200,7 @@ const VaccineForm: React.FC = () => {
           value={formData.vaccineType}
           onChange={handleChange}
           required
+          readOnly // This field is auto-populated based on the selected vaccine
         />
       </label>
 

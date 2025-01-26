@@ -22,13 +22,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px; /* Add padding to prevent content from sticking to the edges */
+  padding: 20px;
 }
 
 .image-section img {
-  max-width: 100%; /* Ensures the image fits within the container */
-  height: auto; /* Maintains aspect ratio */
-  object-fit: cover; /* Ensures the image covers the area if needed */
+  max-width: 100%;
+  height: auto;
+  object-fit: cover;
 }
 
 .form-section {
@@ -68,5 +68,47 @@ button {
 }
 
 button:hover {
-  background-color: #2929d6;
+  
+}
+/* Password input container */
+.password-input-container {
+  position: relative;
+}
+
+.password-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* Password input field */
+.password-input-wrapper input {
+  width: 100%;
+  padding-right: 40px; /* Space for the icon */
+}
+
+/* Password toggle button */
+.password-toggle-button {
+  position: absolute;
+ 
+  top: 50%;
+  left:218px;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  color: #666; /* Icon color */
+}
+
+.password-toggle-button:hover {
+  color: #333; /* Icon color on hover */
+}
+
+/* Remove default button styling */
+.password-toggle-button:focus {
+  outline: none;
 }

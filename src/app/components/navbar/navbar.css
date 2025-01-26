@@ -37,3 +37,8 @@ nav img {
   position: absolute;
   bottom: 2px;
 }
+.navButton{
+  display: flex;
+  flex-direction: row;
+ gap:4px;
+}
